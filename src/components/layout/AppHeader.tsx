@@ -1,7 +1,9 @@
 import React from 'react';
+import { Bell, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bell, LogOut, User, Settings } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
 
 export const AppHeader: React.FC = () => {
   const { user, company, logout } = useAuth();
@@ -35,7 +36,10 @@ export const AppHeader: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
