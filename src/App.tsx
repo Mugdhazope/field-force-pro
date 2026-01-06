@@ -17,6 +17,7 @@ import { MRTasksPage } from "@/pages/mr/MRTasksPage";
 import { MRAttendancePage } from "@/pages/mr/MRAttendancePage";
 import { MRDoctorsPage } from "@/pages/mr/MRDoctorsPage";
 import { MRProductsPage } from "@/pages/mr/MRProductsPage";
+import { MRExpensesPage } from "@/pages/mr/MRExpensesPage";
 import { MRExplanationPage } from "@/pages/mr/MRExplanationPage";
 
 // Admin Pages
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/mr/attendance" element={<MRAttendancePage />} />
               <Route path="/mr/doctors" element={<MRDoctorsPage />} />
               <Route path="/mr/products" element={<MRProductsPage />} />
+              <Route path="/mr/expenses" element={<MRExpensesPage />} />
               <Route path="/mr/explanation" element={<MRExplanationPage />} />
               
               {/* Admin Routes */}
