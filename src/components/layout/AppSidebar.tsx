@@ -40,6 +40,7 @@ const mrNavItems = [
   { title: 'Attendance', url: '/mr/attendance', icon: Calendar },
   { title: 'Doctors', url: '/mr/doctors', icon: Stethoscope },
   { title: 'Products', url: '/mr/products', icon: Package },
+  { title: 'Expenses', url: '/mr/expenses', icon: DollarSign },
   { title: 'Daily Report', url: '/mr/explanation', icon: FileText },
 ];
 
