@@ -2,66 +2,38 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ClipboardList, Stethoscope, Store, MapPinned, Clock, Loader2, CheckCircle } from 'lucide-react';
-import { mockTasks, mockProducts } from '@/lib/mock-data';
-import { Task } from '@/types';
+import { ClipboardList, Stethoscope, Store, Clock, CheckCircle } from 'lucide-react';
+import { mockTasks } from '@/lib/mock-data';
+import { Task, Visit } from '@/types';
 import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
+import { VisitModal } from '@/components/modals';
 
 export const MRTasksPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('pending');
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showVisitModal, setShowVisitModal] = useState(false);
 
-  const userTasks = mockTasks.filter(t => t.mrId === user?.id);
+  const userTasks = tasks.filter(t => t.mrId === user?.id);
   const pendingTasks = userTasks.filter(t => t.status === 'pending');
   const completedTasks = userTasks.filter(t => t.status === 'completed');
 
   const handleCompleteClick = (task: Task) => {
     setSelectedTask(task);
-    setShowCompleteDialog(true);
-    setNotes('');
-    setSelectedProducts([]);
+    setShowVisitModal(true);
   };
 
-  const handleProductToggle = (productId: string) => {
-    setSelectedProducts(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
-  };
-
-  const handleSubmitCompletion = async () => {
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: 'Task Completed!',
-      description: `Visit to ${selectedTask?.doctorName || selectedTask?.shopName} has been recorded.`,
-    });
-    
-    setIsSubmitting(false);
-    setShowCompleteDialog(false);
+  const handleVisitRecorded = (visit: Visit) => {
+    // Mark task as completed
+    setTasks(prev => prev.map(t => 
+      t.id === selectedTask?.id 
+        ? { ...t, status: 'completed' as const, completedAt: visit.timestamp, visitId: visit.id }
+        : t
+    ));
     setSelectedTask(null);
   };
 
@@ -156,71 +128,14 @@ export const MRTasksPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Complete Task Dialog */}
-      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Complete Task</DialogTitle>
-            <DialogDescription>
-              Record your visit to {selectedTask?.doctorName || selectedTask?.shopName}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="p-3 bg-success/10 rounded-lg border border-success/20 flex items-center gap-3">
-              <MapPinned className="h-5 w-5 text-success" />
-              <div>
-                <p className="text-sm font-medium text-success">GPS Location Captured</p>
-                <p className="text-xs text-muted-foreground">Lat: 19.0760, Lng: 72.8777</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Visit Notes</Label>
-              <Textarea
-                placeholder="Enter notes about this visit..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            {selectedTask?.type === 'doctor' && (
-              <div className="space-y-2">
-                <Label>Products Promoted</Label>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1">
-                  {mockProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="flex items-center space-x-2 p-2 rounded border hover:bg-muted/50 cursor-pointer"
-                      onClick={() => handleProductToggle(product.id)}
-                    >
-                      <Checkbox checked={selectedProducts.includes(product.id)} />
-                      <span className="text-sm truncate">{product.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitCompletion} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Recording...
-                </>
-              ) : (
-                'Complete Task'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Visit Modal for completing tasks */}
+      <VisitModal
+        open={showVisitModal}
+        onOpenChange={setShowVisitModal}
+        onVisitRecorded={handleVisitRecorded}
+        visitType={selectedTask?.type === 'doctor' ? 'doctor' : 'chemist'}
+        prefilledTask={selectedTask}
+      />
     </div>
   );
 };
