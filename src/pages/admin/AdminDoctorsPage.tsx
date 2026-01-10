@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { Stethoscope, Plus } from 'lucide-react';
 import { mockDoctors } from '@/lib/mock-data';
+import { Doctor } from '@/types';
+import { AddDoctorModal } from '@/components/modals';
 
 export const AdminDoctorsPage: React.FC = () => {
+  const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const handleDoctorAdded = (doctor: Doctor) => {
+    setDoctors(prev => [doctor, ...prev]);
+  };
+
   const columns = [
     { key: 'name', header: 'Name' },
     { key: 'specialization', header: 'Specialization' },
@@ -16,8 +25,24 @@ export const AdminDoctorsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader title="Doctor Management" description="Manage doctor database" icon={Stethoscope} actions={<Button><Plus className="h-4 w-4 mr-2" />Add Doctor</Button>} />
-      <DataTable columns={columns} data={mockDoctors} />
+      <PageHeader 
+        title="Doctor Management" 
+        description="Manage doctor database" 
+        icon={Stethoscope} 
+        actions={
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Doctor
+          </Button>
+        } 
+      />
+      <DataTable columns={columns} data={doctors} />
+
+      <AddDoctorModal
+        open={showAddModal}
+        onOpenChange={setShowAddModal}
+        onDoctorAdded={handleDoctorAdded}
+      />
     </div>
   );
 };

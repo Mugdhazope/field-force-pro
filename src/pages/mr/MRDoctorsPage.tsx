@@ -4,17 +4,24 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Stethoscope, Search, MapPin, Phone, CheckCircle, Clock } from 'lucide-react';
+import { Stethoscope, Search, MapPin, Phone, CheckCircle, Clock, Plus } from 'lucide-react';
 import { mockDoctors } from '@/lib/mock-data';
+import { Doctor, Visit } from '@/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { AddDoctorModal, VisitModal } from '@/components/modals';
+import { useToast } from '@/hooks/use-toast';
 
 export const MRDoctorsPage: React.FC = () => {
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
+  const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showVisitModal, setShowVisitModal] = useState(false);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
 
   // Sort doctors by "proximity" (mock - just shuffle for demo)
-  const sortedDoctors = [...mockDoctors].sort((a, b) => {
-    // In production, this would calculate actual distance from current location
+  const sortedDoctors = [...doctors].sort((a, b) => {
     return a.coordinates.lat - b.coordinates.lat;
   });
 
@@ -25,12 +32,43 @@ export const MRDoctorsPage: React.FC = () => {
       doctor.town.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleDoctorAdded = (doctor: Doctor) => {
+    setDoctors(prev => [doctor, ...prev]);
+  };
+
+  const handlePunchVisit = (doctorId: string) => {
+    setSelectedDoctorId(doctorId);
+    setShowVisitModal(true);
+  };
+
+  const handleVisitRecorded = (visit: Visit) => {
+    // Update doctor's visit frequency
+    setDoctors(prev => prev.map(doc => 
+      doc.id === visit.doctorId
+        ? {
+            ...doc,
+            visitFrequency: {
+              thisWeek: doc.visitFrequency.thisWeek + 1,
+              thisMonth: doc.visitFrequency.thisMonth + 1,
+            },
+            lastVisit: visit.timestamp,
+          }
+        : doc
+    ));
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Doctors"
         description="View doctors sorted by proximity to your location"
         icon={Stethoscope}
+        actions={
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Doctor
+          </Button>
+        }
       />
 
       {/* Search */}
@@ -104,7 +142,12 @@ export const MRDoctorsPage: React.FC = () => {
                     )}
 
                     {/* Quick Action */}
-                    <Button size="sm" variant="outline" className="w-full mt-4">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full mt-4"
+                      onClick={() => handlePunchVisit(doctor.id)}
+                    >
                       Punch Visit
                     </Button>
                   </div>
@@ -124,6 +167,22 @@ export const MRDoctorsPage: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Add Doctor Modal */}
+      <AddDoctorModal
+        open={showAddModal}
+        onOpenChange={setShowAddModal}
+        onDoctorAdded={handleDoctorAdded}
+      />
+
+      {/* Visit Modal */}
+      <VisitModal
+        open={showVisitModal}
+        onOpenChange={setShowVisitModal}
+        onVisitRecorded={handleVisitRecorded}
+        visitType="doctor"
+        prefilledDoctorId={selectedDoctorId}
+      />
     </div>
   );
 };
