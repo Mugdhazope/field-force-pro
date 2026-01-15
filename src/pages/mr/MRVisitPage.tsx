@@ -3,229 +3,186 @@ import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MapPin, Stethoscope, Store, MapPinned, CheckCircle, Loader2 } from 'lucide-react';
-import { mockDoctors, mockShops, mockProducts } from '@/lib/mock-data';
+import { MapPin, Stethoscope, Store, Building2, CheckCircle, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MapView } from '@/components/map/MapView';
+import { VisitModal } from '@/components/modals/VisitModal';
+import { VisitType, Visit } from '@/types';
 
 export const MRVisitPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('type') === 'shop' ? 'shop' : 'doctor';
+  const initialTab = (searchParams.get('type') as VisitType) || 'doctor';
   
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [selectedDoctor, setSelectedDoctor] = useState('');
-  const [selectedShop, setSelectedShop] = useState('');
-  const [notes, setNotes] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<VisitType>(initialTab);
+  const [showVisitModal, setShowVisitModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [lastVisitType, setLastVisitType] = useState<VisitType>('doctor');
   const { toast } = useToast();
 
   // Mock GPS coordinates (Mumbai area)
   const currentLocation = { lat: 19.0760, lng: 72.8777 };
 
-  const handleProductToggle = (productId: string) => {
-    setSelectedProducts(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (activeTab === 'doctor' && !selectedDoctor) {
-      toast({ title: 'Please select a doctor', variant: 'destructive' });
-      return;
-    }
-    if (activeTab === 'shop' && !selectedShop) {
-      toast({ title: 'Please select a shop', variant: 'destructive' });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    setIsSubmitting(false);
+  const handleVisitRecorded = (visit: Visit) => {
+    setLastVisitType(visit.type);
     setShowSuccess(true);
-
-    // Reset form after success
     setTimeout(() => {
       setShowSuccess(false);
-      setSelectedDoctor('');
-      setSelectedShop('');
-      setNotes('');
-      setSelectedProducts([]);
     }, 2000);
+  };
+
+  const openVisitModal = (type: VisitType) => {
+    setActiveTab(type);
+    setShowVisitModal(true);
+  };
+
+  const getVisitTypeConfig = (type: VisitType) => {
+    switch (type) {
+      case 'doctor':
+        return {
+          icon: Stethoscope,
+          title: 'Doctor Visit',
+          description: 'Record a visit to a doctor with GPS verification and product promotion.',
+          gpsRequired: true,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+        };
+      case 'chemist':
+        return {
+          icon: Store,
+          title: 'Chemist Visit',
+          description: 'Record a visit to a chemist. GPS location is optional.',
+          gpsRequired: false,
+          color: 'text-green-600',
+          bgColor: 'bg-green-50 dark:bg-green-950/30',
+        };
+      case 'stockist':
+        return {
+          icon: Building2,
+          title: 'Stockist Visit',
+          description: 'Record a visit to a stockist with order and availability notes.',
+          gpsRequired: false,
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+        };
+    }
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Punch Visit"
-        description="Record your doctor or shop visit with GPS verification"
+        description="Record your visits to doctors, chemists, or stockists"
         icon={MapPin}
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      {/* Quick Action Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {(['doctor', 'chemist', 'stockist'] as VisitType[]).map((type) => {
+          const config = getVisitTypeConfig(type);
+          const Icon = config.icon;
+          return (
+            <Card 
+              key={type}
+              className={`cursor-pointer hover:shadow-md transition-all border-2 hover:border-primary/30 ${config.bgColor}`}
+              onClick={() => openVisitModal(type)}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-lg bg-background shadow-sm`}>
+                    <Icon className={`h-6 w-6 ${config.color}`} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{config.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {config.description}
+                    </p>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Button size="sm" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Record Visit
+                      </Button>
+                      {config.gpsRequired && (
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                          GPS Required
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as VisitType)}>
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="doctor" className="flex items-center gap-2">
             <Stethoscope className="h-4 w-4" />
-            Doctor Visit
+            <span className="hidden sm:inline">Doctor</span>
           </TabsTrigger>
-          <TabsTrigger value="shop" className="flex items-center gap-2">
+          <TabsTrigger value="chemist" className="flex items-center gap-2">
             <Store className="h-4 w-4" />
-            Shop Visit
+            <span className="hidden sm:inline">Chemist</span>
+          </TabsTrigger>
+          <TabsTrigger value="stockist" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Stockist</span>
           </TabsTrigger>
         </TabsList>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2 space-y-6">
-            <TabsContent value="doctor" className="mt-0 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Doctor Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Select Doctor</Label>
-                    <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Search and select a doctor..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockDoctors.map((doctor) => (
-                          <SelectItem key={doctor.id} value={doctor.id}>
-                            <div className="flex flex-col">
-                              <span>{doctor.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {doctor.specialization} • {doctor.town}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Visit Notes</Label>
-                    <Textarea
-                      placeholder="Enter notes about this visit..."
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Products Promoted</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {mockProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => handleProductToggle(product.id)}
-                      >
-                        <Checkbox
-                          checked={selectedProducts.includes(product.id)}
-                          onCheckedChange={() => handleProductToggle(product.id)}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">{product.category}</p>
+            {(['doctor', 'chemist', 'stockist'] as VisitType[]).map((type) => {
+              const config = getVisitTypeConfig(type);
+              const Icon = config.icon;
+              return (
+                <TabsContent key={type} value={type} className="mt-0 space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Icon className={`h-5 w-5 ${config.color}`} />
+                        {config.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-muted-foreground">{config.description}</p>
+                      
+                      <div className="flex flex-wrap gap-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">GPS:</span>
+                          <span className={config.gpsRequired ? 'text-destructive' : 'text-muted-foreground'}>
+                            {config.gpsRequired ? 'Required' : 'Optional'}
+                          </span>
                         </div>
+                        {type === 'doctor' && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">Products:</span>
+                            <span className="text-muted-foreground">Can promote products</span>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
-            <TabsContent value="shop" className="mt-0 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Shop Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Select Shop</Label>
-                    <Select value={selectedShop} onValueChange={setSelectedShop}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Search and select a shop..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockShops.map((shop) => (
-                          <SelectItem key={shop.id} value={shop.id}>
-                            <div className="flex flex-col">
-                              <span>{shop.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {shop.address}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Visit Notes</Label>
-                    <Textarea
-                      placeholder="Enter notes about this visit..."
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Recording Visit...
-                </>
-              ) : (
-                <>
-                  <MapPinned className="mr-2 h-4 w-4" />
-                  Punch Visit
-                </>
-              )}
-            </Button>
+                      <Button 
+                        size="lg" 
+                        className="w-full mt-4"
+                        onClick={() => setShowVisitModal(true)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Record {config.title}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              );
+            })}
           </div>
 
           {/* GPS Location Card */}
@@ -233,14 +190,14 @@ export const MRVisitPage: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPinned className="h-5 w-5 text-primary" />
-                  GPS Location
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Current Location
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-3 bg-success/10 rounded-lg border border-success/20">
-                    <p className="text-sm font-medium text-success">Location Captured</p>
+                    <p className="text-sm font-medium text-success">Location Available</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Lat: {currentLocation.lat.toFixed(6)}<br />
                       Lng: {currentLocation.lng.toFixed(6)}
@@ -261,26 +218,43 @@ export const MRVisitPage: React.FC = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Visit Summary</CardTitle>
+                <CardTitle>Visit Types</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium capitalize">{activeTab} Visit</span>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
+                  <Stethoscope className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="font-medium text-sm">Doctor</p>
+                    <p className="text-xs text-muted-foreground">GPS mandatory, products</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Time</span>
-                  <span className="font-medium">{new Date().toLocaleTimeString()}</span>
+                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
+                  <Store className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium text-sm">Chemist</p>
+                    <p className="text-xs text-muted-foreground">GPS optional, stock feedback</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Products</span>
-                  <span className="font-medium">{selectedProducts.length} selected</span>
+                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
+                  <Building2 className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <p className="font-medium text-sm">Stockist</p>
+                    <p className="text-xs text-muted-foreground">GPS optional, orders</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </Tabs>
+
+      {/* Visit Modal */}
+      <VisitModal
+        open={showVisitModal}
+        onOpenChange={setShowVisitModal}
+        visitType={activeTab}
+        onVisitRecorded={handleVisitRecorded}
+      />
 
       {/* Success Dialog */}
       <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
@@ -291,7 +265,7 @@ export const MRVisitPage: React.FC = () => {
             </div>
             <DialogTitle className="text-center">Visit Recorded!</DialogTitle>
             <DialogDescription className="text-center mt-2">
-              Your {activeTab} visit has been successfully recorded with GPS verification.
+              Your {lastVisitType} visit has been successfully recorded.
             </DialogDescription>
           </div>
         </DialogContent>

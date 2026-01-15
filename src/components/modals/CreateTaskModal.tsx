@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Task, User, Doctor, Shop } from '@/types';
+import { Task, Doctor, Shop, TaskType } from '@/types';
 import { mockUsers, mockDoctors, mockShops } from '@/lib/mock-data';
 
 interface CreateTaskModalProps {
@@ -38,7 +38,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     mrId: '',
-    type: 'doctor' as 'doctor' | 'shop',
+    type: 'doctor' as TaskType,
     targetId: '',
     dueDate: '',
     dueTime: '',
@@ -47,8 +47,29 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   const mrs = mockUsers.filter(u => u.role === 'mr');
   const selectedMR = mrs.find(m => m.id === formData.mrId);
-  const targets = formData.type === 'doctor' ? mockDoctors : mockShops;
-  const selectedTarget = targets.find(t => t.id === formData.targetId);
+  
+  // Get targets based on task type
+  const getTargets = () => {
+    switch (formData.type) {
+      case 'doctor': return mockDoctors;
+      case 'chemist': return mockShops.filter(s => !s.type || s.type === 'chemist');
+      case 'stockist': return mockShops.filter(s => s.type === 'stockist');
+      default: return [];
+    }
+  };
+  
+  const targets = getTargets();
+  const selectedTarget = formData.type === 'doctor' 
+    ? mockDoctors.find(t => t.id === formData.targetId)
+    : mockShops.find(t => t.id === formData.targetId);
+
+  const getTargetLabel = () => {
+    switch (formData.type) {
+      case 'doctor': return 'Doctor';
+      case 'chemist': return 'Chemist';
+      case 'stockist': return 'Stockist';
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.mrId || !formData.targetId || !formData.dueDate) {
@@ -138,7 +159,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             <Label>Task Type</Label>
             <Select
               value={formData.type}
-              onValueChange={(value: 'doctor' | 'shop') => 
+              onValueChange={(value: TaskType) => 
                 setFormData({ ...formData, type: value, targetId: '' })
               }
             >
@@ -147,19 +168,20 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="doctor">Doctor Visit</SelectItem>
-                <SelectItem value="shop">Shop Visit</SelectItem>
+                <SelectItem value="chemist">Chemist Visit</SelectItem>
+                <SelectItem value="stockist">Stockist Visit</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>{formData.type === 'doctor' ? 'Select Doctor *' : 'Select Shop *'}</Label>
+            <Label>Select {getTargetLabel()} *</Label>
             <Select
               value={formData.targetId}
               onValueChange={(value) => setFormData({ ...formData, targetId: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={`Select ${formData.type}`} />
+                <SelectValue placeholder={`Select ${getTargetLabel().toLowerCase()}`} />
               </SelectTrigger>
               <SelectContent>
                 {targets.map((target) => (
