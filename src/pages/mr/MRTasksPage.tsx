@@ -5,9 +5,9 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, Stethoscope, Store, Clock, CheckCircle } from 'lucide-react';
+import { ClipboardList, Stethoscope, Store, Clock, CheckCircle, Building2 } from 'lucide-react';
 import { mockTasks } from '@/lib/mock-data';
-import { Task, Visit } from '@/types';
+import { Task, Visit, TaskType, VisitType } from '@/types';
 import { format } from 'date-fns';
 import { VisitModal } from '@/components/modals';
 
@@ -37,19 +37,34 @@ export const MRTasksPage: React.FC = () => {
     setSelectedTask(null);
   };
 
+  const getTaskIcon = (type: TaskType) => {
+    switch (type) {
+      case 'doctor': return <Stethoscope className="h-5 w-5" />;
+      case 'chemist': return <Store className="h-5 w-5" />;
+      case 'stockist': return <Building2 className="h-5 w-5" />;
+    }
+  };
+
+  const getTaskColor = (type: TaskType) => {
+    switch (type) {
+      case 'doctor': return 'bg-blue-100 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400';
+      case 'chemist': return 'bg-green-100 text-green-600 dark:bg-green-950/50 dark:text-green-400';
+      case 'stockist': return 'bg-purple-100 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400';
+    }
+  };
+
   const TaskCard: React.FC<{ task: Task; showComplete?: boolean }> = ({ task, showComplete }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1">
-            <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
-              task.type === 'doctor' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-            }`}>
-              {task.type === 'doctor' ? <Stethoscope className="h-5 w-5" /> : <Store className="h-5 w-5" />}
+            <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${getTaskColor(task.type)}`}>
+              {getTaskIcon(task.type)}
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-medium">{task.doctorName || task.shopName}</p>
               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                <span className="capitalize text-xs bg-muted px-2 py-0.5 rounded">{task.type}</span>
                 <Clock className="h-3 w-3" />
                 <span>Due: {format(new Date(task.dueDate), 'MMM d, h:mm a')}</span>
               </div>
@@ -133,7 +148,7 @@ export const MRTasksPage: React.FC = () => {
         open={showVisitModal}
         onOpenChange={setShowVisitModal}
         onVisitRecorded={handleVisitRecorded}
-        visitType={selectedTask?.type === 'doctor' ? 'doctor' : 'chemist'}
+        visitType={selectedTask?.type || 'doctor'}
         prefilledTask={selectedTask}
       />
     </div>

@@ -49,9 +49,12 @@ export interface Doctor {
   companyId: string;
 }
 
+export type ShopType = 'chemist' | 'stockist';
+
 export interface Shop {
   id: string;
   name: string;
+  type?: ShopType;
   address: string;
   town: string;
   phone: string;
@@ -75,9 +78,11 @@ export interface Product {
   companyId: string;
 }
 
+export type VisitType = 'doctor' | 'chemist' | 'stockist';
+
 export interface Visit {
   id: string;
-  type: 'doctor' | 'shop';
+  type: VisitType;
   mrId: string;
   mrName: string;
   doctorId?: string;
@@ -85,7 +90,7 @@ export interface Visit {
   shopId?: string;
   shopName?: string;
   timestamp: string;
-  coordinates: {
+  coordinates?: {
     lat: number;
     lng: number;
   };
@@ -95,11 +100,13 @@ export interface Visit {
   companyId: string;
 }
 
+export type TaskType = 'doctor' | 'chemist' | 'stockist';
+
 export interface Task {
   id: string;
   mrId: string;
   mrName: string;
-  type: 'doctor' | 'shop';
+  type: TaskType;
   doctorId?: string;
   doctorName?: string;
   shopId?: string;

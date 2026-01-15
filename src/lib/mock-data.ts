@@ -183,11 +183,12 @@ export const mockDoctors: Doctor[] = [
   },
 ];
 
-// Shops
+// Shops (Chemists and Stockists)
 export const mockShops: Shop[] = [
   {
     id: 'shop-001',
     name: 'MedPlus Pharmacy',
+    type: 'chemist',
     address: '12 Main Road, Andheri East, Mumbai',
     town: 'Andheri',
     phone: '+91 22 3456 7890',
@@ -198,6 +199,7 @@ export const mockShops: Shop[] = [
   {
     id: 'shop-002',
     name: 'Apollo Pharmacy',
+    type: 'chemist',
     address: '34 Station Road, Bandra, Mumbai',
     town: 'Bandra',
     phone: '+91 22 3456 7891',
@@ -208,11 +210,34 @@ export const mockShops: Shop[] = [
   {
     id: 'shop-003',
     name: 'Wellness Forever',
+    type: 'chemist',
     address: '67 Hill Road, Thane',
     town: 'Thane',
     phone: '+91 22 3456 7892',
     contactPerson: 'Anita Joshi',
     coordinates: { lat: 19.2094, lng: 72.9631 },
+    companyId: 'comp-001',
+  },
+  {
+    id: 'shop-004',
+    name: 'Pharma Distributors Ltd',
+    type: 'stockist',
+    address: '78 Industrial Area, Andheri West, Mumbai',
+    town: 'Andheri',
+    phone: '+91 22 3456 7893',
+    contactPerson: 'Vijay Mehta',
+    coordinates: { lat: 19.1364, lng: 72.8296 },
+    companyId: 'comp-001',
+  },
+  {
+    id: 'shop-005',
+    name: 'Medicare Wholesale',
+    type: 'stockist',
+    address: '45 Warehouse Complex, Thane',
+    town: 'Thane',
+    phone: '+91 22 3456 7894',
+    contactPerson: 'Ashok Kumar',
+    coordinates: { lat: 19.2183, lng: 72.9781 },
     companyId: 'comp-001',
   },
 ];
@@ -321,7 +346,7 @@ export const mockVisits: Visit[] = [
   },
   {
     id: 'visit-003',
-    type: 'shop',
+    type: 'chemist',
     mrId: 'user-002',
     mrName: 'Amit Sharma',
     shopId: 'shop-001',
@@ -329,7 +354,7 @@ export const mockVisits: Visit[] = [
     timestamp: `${formatDate(today)}T14:00:00Z`,
     coordinates: { lat: 19.1197, lng: 72.8464 },
     notes: 'Restocked inventory, collected payment',
-    productsPromoted: ['prod-001', 'prod-002', 'prod-003'],
+    productsPromoted: [],
     companyId: 'comp-001',
   },
   {
@@ -379,7 +404,7 @@ export const mockTasks: Task[] = [
     id: 'task-002',
     mrId: 'user-002',
     mrName: 'Amit Sharma',
-    type: 'shop',
+    type: 'chemist',
     shopId: 'shop-002',
     shopName: 'Apollo Pharmacy',
     dueDate: `${formatDate(today)}T17:00:00Z`,
