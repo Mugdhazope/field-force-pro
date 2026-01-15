@@ -18,11 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, MapPinned, Stethoscope, Store, Package, Building2 } from 'lucide-react';
+import { Loader2, MapPinned, Stethoscope, Store, Package, Building2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Visit, Doctor, Shop, Task, VisitType } from '@/types';
 import { mockDoctors, mockShops, mockProducts } from '@/lib/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
+import { AddDoctorModal } from './AddDoctorModal';
+import { AddShopModal } from './AddShopModal';
 
 interface VisitModalProps {
   open: boolean;
@@ -54,6 +56,14 @@ export const VisitModal: React.FC<VisitModalProps> = ({
     selectedProducts: [] as string[],
   });
 
+  // Nested modal states
+  const [showAddDoctor, setShowAddDoctor] = useState(false);
+  const [showAddShop, setShowAddShop] = useState(false);
+  
+  // Local state for newly added entities (session-based)
+  const [localDoctors, setLocalDoctors] = useState<Doctor[]>([]);
+  const [localShops, setLocalShops] = useState<Shop[]>([]);
+
   const isDoctor = visitType === 'doctor';
   const isChemist = visitType === 'chemist';
   const isStockist = visitType === 'stockist';
@@ -61,12 +71,20 @@ export const VisitModal: React.FC<VisitModalProps> = ({
   // GPS is mandatory only for doctor visits
   const gpsRequired = isDoctor;
   
-  // Filter shops by type for chemist/stockist
-  const getTargets = () => {
-    if (isDoctor) return mockDoctors;
-    if (isChemist) return mockShops.filter(s => !s.type || s.type === 'chemist');
-    if (isStockist) return mockShops.filter(s => s.type === 'stockist');
-    return mockShops;
+  // Filter shops by type for chemist/stockist and combine with local additions
+  const getTargets = (): (Doctor | Shop)[] => {
+    if (isDoctor) return [...mockDoctors, ...localDoctors];
+    if (isChemist) {
+      const baseShops = mockShops.filter(s => !s.type || s.type === 'chemist');
+      const localChemists = localShops.filter(s => s.type === 'chemist');
+      return [...baseShops, ...localChemists];
+    }
+    if (isStockist) {
+      const baseShops = mockShops.filter(s => s.type === 'stockist');
+      const localStockists = localShops.filter(s => s.type === 'stockist');
+      return [...baseShops, ...localStockists];
+    }
+    return [...mockShops, ...localShops];
   };
   
   const targets = getTargets();
@@ -128,6 +146,32 @@ export const VisitModal: React.FC<VisitModalProps> = ({
     }));
   };
 
+  const handleDoctorAdded = (doctor: Doctor) => {
+    setLocalDoctors(prev => [...prev, doctor]);
+    setFormData(prev => ({ ...prev, targetId: doctor.id }));
+    toast({
+      title: 'Doctor Added',
+      description: `${doctor.name} is now available for selection.`,
+    });
+  };
+
+  const handleShopAdded = (shop: Shop) => {
+    setLocalShops(prev => [...prev, shop]);
+    setFormData(prev => ({ ...prev, targetId: shop.id }));
+    toast({
+      title: `${shop.type === 'stockist' ? 'Stockist' : 'Chemist'} Added`,
+      description: `${shop.name} is now available for selection.`,
+    });
+  };
+
+  const handleAddNewClick = () => {
+    if (isDoctor) {
+      setShowAddDoctor(true);
+    } else {
+      setShowAddShop(true);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.targetId) {
       toast({
@@ -150,9 +194,10 @@ export const VisitModal: React.FC<VisitModalProps> = ({
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
 
+    // Find from both mock and local data
     const selectedTarget = isDoctor 
-      ? mockDoctors.find(t => t.id === formData.targetId)
-      : mockShops.find(t => t.id === formData.targetId);
+      ? [...mockDoctors, ...localDoctors].find(t => t.id === formData.targetId)
+      : [...mockShops, ...localShops].find(t => t.id === formData.targetId);
 
     const newVisit: Visit = {
       id: `visit-${Date.now()}`,
@@ -228,144 +273,175 @@ export const VisitModal: React.FC<VisitModalProps> = ({
   const canSubmit = gpsRequired ? gpsStatus === 'captured' : true;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {getIcon()}
-            {getTitle()}
-          </DialogTitle>
-          <DialogDescription>
-            {prefilledTask
-              ? `Complete your visit to ${prefilledTask.doctorName || prefilledTask.shopName}`
-              : `Record your ${visitType} visit${gpsRequired ? ' with GPS verification' : ''}`
-            }
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {getIcon()}
+              {getTitle()}
+            </DialogTitle>
+            <DialogDescription>
+              {prefilledTask
+                ? `Complete your visit to ${prefilledTask.doctorName || prefilledTask.shopName}`
+                : `Record your ${visitType} visit${gpsRequired ? ' with GPS verification' : ''}`
+              }
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* GPS Status - Only show for doctor visits */}
-          {gpsRequired && (
-            <div className={`p-3 rounded-lg border flex items-center gap-3 ${
-              gpsStatus === 'captured' 
-                ? 'bg-success/10 border-success/20' 
-                : gpsStatus === 'error'
-                ? 'bg-destructive/10 border-destructive/20'
-                : 'bg-muted border-border'
-            }`}>
-              {gpsStatus === 'loading' ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : (
-                <MapPinned className={`h-5 w-5 ${gpsStatus === 'captured' ? 'text-success' : 'text-destructive'}`} />
-              )}
-              <div>
-                <p className={`text-sm font-medium ${
-                  gpsStatus === 'captured' ? 'text-success' : 
-                  gpsStatus === 'error' ? 'text-destructive' : 'text-muted-foreground'
-                }`}>
-                  {gpsStatus === 'loading' && 'Capturing GPS Location...'}
-                  {gpsStatus === 'captured' && 'GPS Location Captured'}
-                  {gpsStatus === 'error' && 'GPS Error - Using fallback'}
-                </p>
-                {gpsStatus === 'captured' && coordinates && (
-                  <p className="text-xs text-muted-foreground">
-                    Lat: {coordinates.lat.toFixed(4)}, Lng: {coordinates.lng.toFixed(4)}
+          <div className="space-y-4 py-4">
+            {/* GPS Status - Only show for doctor visits */}
+            {gpsRequired && (
+              <div className={`p-3 rounded-lg border flex items-center gap-3 ${
+                gpsStatus === 'captured' 
+                  ? 'bg-success/10 border-success/20' 
+                  : gpsStatus === 'error'
+                  ? 'bg-destructive/10 border-destructive/20'
+                  : 'bg-muted border-border'
+              }`}>
+                {gpsStatus === 'loading' ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <MapPinned className={`h-5 w-5 ${gpsStatus === 'captured' ? 'text-success' : 'text-destructive'}`} />
+                )}
+                <div>
+                  <p className={`text-sm font-medium ${
+                    gpsStatus === 'captured' ? 'text-success' : 
+                    gpsStatus === 'error' ? 'text-destructive' : 'text-muted-foreground'
+                  }`}>
+                    {gpsStatus === 'loading' && 'Capturing GPS Location...'}
+                    {gpsStatus === 'captured' && 'GPS Location Captured'}
+                    {gpsStatus === 'error' && 'GPS Error - Using fallback'}
                   </p>
+                  {gpsStatus === 'captured' && coordinates && (
+                    <p className="text-xs text-muted-foreground">
+                      Lat: {coordinates.lat.toFixed(4)}, Lng: {coordinates.lng.toFixed(4)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* GPS Not Required Notice */}
+            {!gpsRequired && (
+              <div className="p-3 rounded-lg border bg-muted/50 border-border flex items-center gap-3">
+                <MapPinned className="h-5 w-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  GPS location is optional for {visitType} visits
+                </p>
+              </div>
+            )}
+
+            {/* Target Selection with Add New button */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Select {getTargetLabel()} *</Label>
+                {!prefilledTask && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-primary hover:text-primary"
+                    onClick={handleAddNewClick}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add New {getTargetLabel()}
+                  </Button>
                 )}
               </div>
+              <Select
+                value={formData.targetId}
+                onValueChange={(value) => setFormData({ ...formData, targetId: value })}
+                disabled={!!prefilledTask}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={`Select ${getTargetLabel().toLowerCase()}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {targets.map((target) => (
+                    <SelectItem key={target.id} value={target.id}>
+                      {target.name} - {target.town}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
 
-          {/* GPS Not Required Notice */}
-          {!gpsRequired && (
-            <div className="p-3 rounded-lg border bg-muted/50 border-border flex items-center gap-3">
-              <MapPinned className="h-5 w-5 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                GPS location is optional for {visitType} visits
-              </p>
-            </div>
-          )}
-
-          {/* Target Selection */}
-          <div className="space-y-2">
-            <Label>Select {getTargetLabel()} *</Label>
-            <Select
-              value={formData.targetId}
-              onValueChange={(value) => setFormData({ ...formData, targetId: value })}
-              disabled={!!prefilledTask}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={`Select ${getTargetLabel().toLowerCase()}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {targets.map((target) => (
-                  <SelectItem key={target.id} value={target.id}>
-                    {target.name} - {target.town}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">
-              {visitType === 'stockist' ? 'Order / Availability Notes' : 'Notes'}
-            </Label>
-            <Textarea
-              id="notes"
-              placeholder={getNotesPlaceholder()}
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-            />
-          </div>
-
-          {/* Products - Only for Doctor visits */}
-          {isDoctor && (
+            {/* Notes */}
             <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Products Promoted
+              <Label htmlFor="notes">
+                {visitType === 'stockist' ? 'Order / Availability Notes' : 'Notes'}
               </Label>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 border rounded-lg">
-                {mockProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => handleProductToggle(product.id)}
-                  >
-                    <Checkbox 
-                      checked={formData.selectedProducts.includes(product.id)}
-                      onCheckedChange={() => handleProductToggle(product.id)}
-                    />
-                    <span className="text-sm truncate">{product.name}</span>
-                  </div>
-                ))}
-              </div>
+              <Textarea
+                id="notes"
+                placeholder={getNotesPlaceholder()}
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={3}
+              />
             </div>
-          )}
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isSubmitting || !canSubmit}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Recording...
-              </>
-            ) : (
-              prefilledTask ? 'Complete Task' : 'Record Visit'
+            {/* Products - Only for Doctor visits */}
+            {isDoctor && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Products Promoted
+                </Label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 border rounded-lg">
+                  {mockProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => handleProductToggle(product.id)}
+                    >
+                      <Checkbox 
+                        checked={formData.selectedProducts.includes(product.id)}
+                        onCheckedChange={() => handleProductToggle(product.id)}
+                      />
+                      <span className="text-sm truncate">{product.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting || !canSubmit}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Recording...
+                </>
+              ) : (
+                prefilledTask ? 'Complete Task' : 'Record Visit'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Nested Add Doctor Modal */}
+      <AddDoctorModal
+        open={showAddDoctor}
+        onOpenChange={setShowAddDoctor}
+        onDoctorAdded={handleDoctorAdded}
+      />
+
+      {/* Nested Add Shop Modal - pre-set type based on visit type */}
+      <AddShopModal
+        open={showAddShop}
+        onOpenChange={setShowAddShop}
+        onShopAdded={handleShopAdded}
+        defaultType={isStockist ? 'stockist' : 'chemist'}
+      />
+    </>
   );
 };

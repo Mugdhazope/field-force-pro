@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,35 +19,38 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Shop } from '@/types';
+import { Shop, ShopType } from '@/types';
 
 interface AddShopModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onShopAdded: (shop: Shop) => void;
-}
-
-export type ShopType = 'chemist' | 'stockist';
-
-export interface ExtendedShop extends Shop {
-  type?: ShopType;
+  defaultType?: ShopType;
 }
 
 export const AddShopModal: React.FC<AddShopModalProps> = ({
   open,
   onOpenChange,
   onShopAdded,
+  defaultType = 'chemist',
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    type: 'chemist' as ShopType,
+    type: defaultType as ShopType,
     address: '',
     town: '',
     phone: '',
     contactPerson: '',
   });
+
+  // Update form type when defaultType changes
+  useEffect(() => {
+    if (open) {
+      setFormData(prev => ({ ...prev, type: defaultType }));
+    }
+  }, [open, defaultType]);
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -62,7 +65,7 @@ export const AddShopModal: React.FC<AddShopModalProps> = ({
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const newShop: ExtendedShop = {
+    const newShop: Shop = {
       id: `shop-${Date.now()}`,
       name: formData.name,
       type: formData.type,
@@ -77,8 +80,8 @@ export const AddShopModal: React.FC<AddShopModalProps> = ({
     onShopAdded(newShop);
     
     toast({
-      title: 'Shop Added',
-      description: `${formData.name} (${formData.type}) has been added.`,
+      title: `${formData.type === 'stockist' ? 'Stockist' : 'Chemist'} Added`,
+      description: `${formData.name} has been added.`,
     });
 
     setIsSubmitting(false);
@@ -89,7 +92,7 @@ export const AddShopModal: React.FC<AddShopModalProps> = ({
   const resetForm = () => {
     setFormData({
       name: '',
-      type: 'chemist',
+      type: defaultType,
       address: '',
       town: '',
       phone: '',
@@ -97,22 +100,26 @@ export const AddShopModal: React.FC<AddShopModalProps> = ({
     });
   };
 
+  const getTitle = () => {
+    return formData.type === 'stockist' ? 'Add New Stockist' : 'Add New Chemist';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Shop</DialogTitle>
+          <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>
-            Add a chemist or stockist to the database
+            Add a {formData.type} to the database
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Shop Name *</Label>
+            <Label htmlFor="name">{formData.type === 'stockist' ? 'Stockist' : 'Chemist'} Name *</Label>
             <Input
               id="name"
-              placeholder="e.g., MedPlus Pharmacy"
+              placeholder={formData.type === 'stockist' ? 'e.g., ABC Distributors' : 'e.g., MedPlus Pharmacy'}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
@@ -187,7 +194,7 @@ export const AddShopModal: React.FC<AddShopModalProps> = ({
                 Adding...
               </>
             ) : (
-              'Add Shop'
+              `Add ${formData.type === 'stockist' ? 'Stockist' : 'Chemist'}`
             )}
           </Button>
         </DialogFooter>
