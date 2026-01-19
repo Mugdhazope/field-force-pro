@@ -4,3 +4,4 @@ export { AddDoctorModal } from './AddDoctorModal';
 export { AddShopModal } from './AddShopModal';
 export { CreateTaskModal } from './CreateTaskModal';
 export { VisitModal } from './VisitModal';
+export { DeactivateMRModal } from './DeactivateMRModal';

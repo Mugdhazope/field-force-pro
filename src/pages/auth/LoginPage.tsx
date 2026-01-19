@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, User, ShieldCheck, Loader2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { User, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const LoginPage: React.FC = () => {
@@ -15,6 +16,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('mr');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login, company } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,23 +24,26 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
-      const success = await login(username, password, selectedRole);
-      if (success) {
+      const result = await login(username, password, selectedRole);
+      if (result.success) {
         toast({
           title: 'Welcome back!',
           description: 'You have successfully logged in.',
         });
         navigate(selectedRole === 'mr' ? '/mr/dashboard' : '/admin/dashboard');
       } else {
+        setError(result.error || 'Invalid username or password. Please try again.');
         toast({
           title: 'Login failed',
-          description: 'Invalid username or password. Please try again.',
+          description: result.error || 'Invalid username or password.',
           variant: 'destructive',
         });
       }
     } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
       toast({
         title: 'Error',
         description: 'An unexpected error occurred. Please try again.',
@@ -67,6 +72,14 @@ export const LoginPage: React.FC = () => {
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <Tabs value={selectedRole} onValueChange={(v) => setSelectedRole(v as UserRole)} className="mb-6">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="mr" className="flex items-center gap-2">
@@ -88,7 +101,10 @@ export const LoginPage: React.FC = () => {
                   type="text"
                   placeholder="Enter your username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setError(null);
+                  }}
                   required
                   autoComplete="username"
                 />
@@ -101,7 +117,10 @@ export const LoginPage: React.FC = () => {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError(null);
+                  }}
                   required
                   autoComplete="current-password"
                 />

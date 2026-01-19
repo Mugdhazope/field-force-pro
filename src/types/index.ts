@@ -14,6 +14,11 @@ export interface User {
   phone: string;
   isActive: boolean;
   createdAt: string;
+  // Security & audit fields
+  lastActiveAt?: string;
+  deactivatedAt?: string;
+  deactivatedBy?: string;
+  deactivationReason?: string;
 }
 
 export interface Company {
@@ -205,4 +210,13 @@ export interface ProductPromotion {
   doctorName?: string;
   count: number;
   period: 'week' | 'month';
+}
+
+export interface LoginHistory {
+  id: string;
+  userId: string;
+  timestamp: string;
+  ipAddress?: string;
+  userAgent?: string;
+  success: boolean;
 }
