@@ -13,12 +13,12 @@ export const AdminMRTrackingPage: React.FC = () => {
   const navigate = useNavigate();
 
   const columns = [
-    { key: 'mrName', header: 'MR Name' },
-    { key: 'firstPunch', header: 'First Punch', render: (item: any) => item.firstPunch ? format(new Date(item.firstPunch), 'h:mm a') : '--' },
-    { key: 'lastPunch', header: 'Last Punch', render: (item: any) => item.lastPunch ? format(new Date(item.lastPunch), 'h:mm a') : '--' },
-    { key: 'totalVisits', header: 'Visits' },
-    { key: 'status', header: 'Status', render: (item: any) => <StatusBadge status={item.status} /> },
-    { key: 'actions', header: '', render: (item: any) => (
+    { key: 'mrName', header: 'MR Name', priority: 1 },
+    { key: 'firstPunch', header: 'First Punch', priority: 3, render: (item: any) => item.firstPunch ? format(new Date(item.firstPunch), 'h:mm a') : '--' },
+    { key: 'lastPunch', header: 'Last Punch', priority: 4, hideOnMobile: true, render: (item: any) => item.lastPunch ? format(new Date(item.lastPunch), 'h:mm a') : '--' },
+    { key: 'totalVisits', header: 'Visits', priority: 2 },
+    { key: 'status', header: 'Status', priority: 2, render: (item: any) => <StatusBadge status={item.status} /> },
+    { key: 'actions', header: '', priority: 1, render: (item: any) => (
       <Button size="sm" variant="ghost" onClick={() => navigate(`/admin/mr-tracking/${item.mrId}`)}>
         <Eye className="h-4 w-4 mr-1" /> View
       </Button>

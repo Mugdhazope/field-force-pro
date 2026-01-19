@@ -16,11 +16,11 @@ export const AdminProductsPage: React.FC = () => {
   };
 
   const columns = [
-    { key: 'name', header: 'Product' },
-    { key: 'category', header: 'Category' },
-    { key: 'sku', header: 'SKU' },
-    { key: 'price', header: 'Price', render: (item: any) => `₹${item.price}` },
-    { key: 'targetFrequency', header: 'Weekly Target' },
+    { key: 'name', header: 'Product', priority: 1 },
+    { key: 'category', header: 'Category', priority: 2 },
+    { key: 'sku', header: 'SKU', priority: 4, hideOnMobile: true },
+    { key: 'price', header: 'Price', priority: 3, render: (item: any) => `₹${item.price}` },
+    { key: 'targetFrequency', header: 'Weekly Target', priority: 4, hideOnMobile: true },
   ];
 
   return (

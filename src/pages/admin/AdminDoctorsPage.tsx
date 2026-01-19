@@ -16,11 +16,11 @@ export const AdminDoctorsPage: React.FC = () => {
   };
 
   const columns = [
-    { key: 'name', header: 'Name' },
-    { key: 'specialization', header: 'Specialization' },
-    { key: 'town', header: 'Location' },
-    { key: 'phone', header: 'Phone' },
-    { key: 'visits', header: 'Monthly Visits', render: (item: any) => item.visitFrequency.thisMonth },
+    { key: 'name', header: 'Name', priority: 1 },
+    { key: 'specialization', header: 'Specialization', priority: 2 },
+    { key: 'town', header: 'Location', priority: 3 },
+    { key: 'phone', header: 'Phone', priority: 4, hideOnMobile: true },
+    { key: 'visits', header: 'Monthly Visits', priority: 3, render: (item: any) => item.visitFrequency.thisMonth },
   ];
 
   return (

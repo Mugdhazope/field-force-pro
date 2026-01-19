@@ -18,11 +18,11 @@ export const AdminTasksPage: React.FC = () => {
   };
 
   const columns = [
-    { key: 'mrName', header: 'Assigned To' },
-    { key: 'target', header: 'Target', render: (item: any) => item.doctorName || item.shopName },
-    { key: 'type', header: 'Type', render: (item: any) => <span className="capitalize">{item.type}</span> },
-    { key: 'dueDate', header: 'Due Date', render: (item: any) => format(new Date(item.dueDate), 'MMM d, h:mm a') },
-    { key: 'status', header: 'Status', render: (item: any) => <StatusBadge status={item.status} /> },
+    { key: 'mrName', header: 'Assigned To', priority: 1 },
+    { key: 'target', header: 'Target', priority: 2, render: (item: any) => item.doctorName || item.shopName },
+    { key: 'type', header: 'Type', priority: 4, hideOnMobile: true, render: (item: any) => <span className="capitalize">{item.type}</span> },
+    { key: 'dueDate', header: 'Due Date', priority: 3, render: (item: any) => format(new Date(item.dueDate), 'MMM d, h:mm a') },
+    { key: 'status', header: 'Status', priority: 2, render: (item: any) => <StatusBadge status={item.status} /> },
   ];
 
   return (
