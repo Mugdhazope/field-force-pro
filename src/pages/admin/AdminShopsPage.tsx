@@ -16,11 +16,11 @@ export const AdminShopsPage: React.FC = () => {
   };
 
   const columns = [
-    { key: 'name', header: 'Shop Name' },
-    { key: 'address', header: 'Address' },
-    { key: 'town', header: 'Town' },
-    { key: 'contactPerson', header: 'Contact Person' },
-    { key: 'phone', header: 'Phone' },
+    { key: 'name', header: 'Shop Name', priority: 1 },
+    { key: 'address', header: 'Address', priority: 4, hideOnMobile: true },
+    { key: 'town', header: 'Town', priority: 2 },
+    { key: 'contactPerson', header: 'Contact Person', priority: 3 },
+    { key: 'phone', header: 'Phone', priority: 4, hideOnMobile: true },
   ];
 
   return (
