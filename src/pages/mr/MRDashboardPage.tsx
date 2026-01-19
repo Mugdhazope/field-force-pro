@@ -19,6 +19,7 @@ import {
 import { mockMRDashboardMetrics, mockTasks, mockVisits, mockAttendance } from '@/lib/mock-data';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { SecureScreen } from '@/components/security/SecureScreen';
 
 export const MRDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -37,12 +38,13 @@ export const MRDashboardPage: React.FC = () => {
   })) || [];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
-        title={`Good ${getGreeting()}, ${user?.name?.split(' ')[0]}!`}
-        description={format(new Date(), 'EEEE, MMMM d, yyyy')}
-        icon={LayoutDashboard}
-      />
+    <SecureScreen showWatermark preventCapture>
+      <div className="space-y-4 md:space-y-6 animate-fade-in">
+        <PageHeader
+          title={`Good ${getGreeting()}, ${user?.name?.split(' ')[0]}!`}
+          description={format(new Date(), 'EEEE, MMMM d, yyyy')}
+          icon={LayoutDashboard}
+        />
 
       {/* Today's Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -209,7 +211,8 @@ export const MRDashboardPage: React.FC = () => {
           </Link>
         </Button>
       </div>
-    </div>
+      </div>
+    </SecureScreen>
   );
 };
 

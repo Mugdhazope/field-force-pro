@@ -14,6 +14,7 @@ import { MapPin, Stethoscope, Store, Building2, CheckCircle, Plus } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 import { MapView } from '@/components/map/MapView';
 import { VisitModal } from '@/components/modals/VisitModal';
+import { SecureScreen } from '@/components/security/SecureScreen';
 import { VisitType, Visit } from '@/types';
 
 export const MRVisitPage: React.FC = () => {
@@ -75,12 +76,13 @@ export const MRVisitPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
-        title="Punch Visit"
-        description="Record your visits to doctors, chemists, or stockists"
-        icon={MapPin}
-      />
+    <SecureScreen showWatermark preventCapture>
+      <div className="space-y-4 md:space-y-6 animate-fade-in">
+        <PageHeader
+          title="Punch Visit"
+          description="Record your visits to doctors, chemists, or stockists"
+          icon={MapPin}
+        />
 
       {/* Quick Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -270,6 +272,7 @@ export const MRVisitPage: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </SecureScreen>
   );
 };

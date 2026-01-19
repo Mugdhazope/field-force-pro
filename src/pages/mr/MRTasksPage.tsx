@@ -10,6 +10,7 @@ import { mockTasks } from '@/lib/mock-data';
 import { Task, Visit, TaskType, VisitType } from '@/types';
 import { format } from 'date-fns';
 import { VisitModal } from '@/components/modals';
+import { SecureScreen } from '@/components/security/SecureScreen';
 
 export const MRTasksPage: React.FC = () => {
   const { user } = useAuth();
@@ -87,12 +88,13 @@ export const MRTasksPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
-        title="My Tasks"
-        description="View and complete your assigned tasks"
-        icon={ClipboardList}
-      />
+    <SecureScreen showWatermark preventCapture>
+      <div className="space-y-4 md:space-y-6 animate-fade-in">
+        <PageHeader
+          title="My Tasks"
+          description="View and complete your assigned tasks"
+          icon={ClipboardList}
+        />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -151,6 +153,7 @@ export const MRTasksPage: React.FC = () => {
         visitType={selectedTask?.type || 'doctor'}
         prefilledTask={selectedTask}
       />
-    </div>
+      </div>
+    </SecureScreen>
   );
 };
