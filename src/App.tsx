@@ -24,6 +24,7 @@ import { MRExplanationPage } from "@/pages/mr/MRExplanationPage";
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminMRTrackingPage } from "@/pages/admin/AdminMRTrackingPage";
 import { AdminMRDetailPage } from "@/pages/admin/AdminMRDetailPage";
+import { AdminVisitsPage } from "@/pages/admin/AdminVisitsPage";
 import { AdminTasksPage } from "@/pages/admin/AdminTasksPage";
 import { AdminApprovalsPage } from "@/pages/admin/AdminApprovalsPage";
 import { AdminDoctorsPage } from "@/pages/admin/AdminDoctorsPage";
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
               <Route path="/admin/mr-tracking" element={<AdminMRTrackingPage />} />
               <Route path="/admin/mr-tracking/:id" element={<AdminMRDetailPage />} />
+              <Route path="/admin/visits" element={<AdminVisitsPage />} />
               <Route path="/admin/tasks" element={<AdminTasksPage />} />
               <Route path="/admin/approvals" element={<AdminApprovalsPage />} />
               <Route path="/admin/doctors" element={<AdminDoctorsPage />} />
