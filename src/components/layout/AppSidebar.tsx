@@ -51,7 +51,6 @@ const adminNavItems = [
   { title: 'Tasks', url: '/admin/tasks', icon: ClipboardList },
   { title: 'Approvals', url: '/admin/approvals', icon: CheckSquare },
   { title: 'Doctors', url: '/admin/doctors', icon: Stethoscope },
-  { title: 'Shops', url: '/admin/shops', icon: Store },
   { title: 'Products', url: '/admin/products', icon: Package },
   { title: 'MR Management', url: '/admin/mrs', icon: Users },
   { title: 'Expenses', url: '/admin/expenses', icon: DollarSign },
