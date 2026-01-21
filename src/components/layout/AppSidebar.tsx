@@ -47,6 +47,7 @@ const mrNavItems = [
 const adminNavItems = [
   { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
   { title: 'MR Tracking', url: '/admin/mr-tracking', icon: MapPin },
+  { title: 'Visits', url: '/admin/visits', icon: UserCheck },
   { title: 'Tasks', url: '/admin/tasks', icon: ClipboardList },
   { title: 'Approvals', url: '/admin/approvals', icon: CheckSquare },
   { title: 'Doctors', url: '/admin/doctors', icon: Stethoscope },
